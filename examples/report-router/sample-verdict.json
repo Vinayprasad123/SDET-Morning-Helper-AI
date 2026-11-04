@@ -1,0 +1,53 @@
+{
+  "build": {
+    "number": 1042,
+    "suite": "UX Regression",
+    "env": "Prod US",
+    "report_url": "https://jenkins.example.com/job/ui-regression/1042/serenity/"
+  },
+  "groups": [
+    {
+      "category": "script_fix",
+      "confidence": "high",
+      "title": "Catalog event mapping: wrong dropdown selected",
+      "scenarios": ["Verify catalog event mapping", "Verify catalog edit retains mapping"],
+      "root_cause": "Positional locator picked the new optional 'price as' dropdown instead of 'product_id as'",
+      "fix_location": "CatalogsPageElements.EVENT_ROW_ATTRIBUTE_DD — locate by header label"
+    },
+    {
+      "category": "test_data",
+      "confidence": "high",
+      "title": "Static segment upload: prerequisite list missing",
+      "scenarios": ["Verify static segment from CSV"],
+      "root_cause": "Account has no 'automation-static-list' — data suite not run on this env",
+      "fix_location": "Test Data Creation suite → StaticSegments prerequisite"
+    },
+    {
+      "category": "intermittent",
+      "confidence": "medium",
+      "title": "Push campaign: toast read before render",
+      "scenarios": ["Verify push campaign save toast"],
+      "root_cause": "Toast assertion raced the UI; passed on automatic rerun",
+      "fix_location": "PushCampaignPage.verifySaveToast — wait for toast visibility",
+      "flake_count": 3
+    },
+    {
+      "category": "defect",
+      "confidence": "high",
+      "title": "Journey stats: 'Exited' count not updated",
+      "scenarios": ["Verify journey exit stats after user exits"],
+      "expected": "Exited = 1",
+      "actual": "Exited = 0 after 15 minutes (reproduced on rerun)",
+      "repro": "Create journey → trigger event for test user → user exits at block 2 → open journey stats",
+      "evidence_url": "https://jenkins.example.com/job/ui-regression/1042/serenity/abc123.html"
+    },
+    {
+      "category": "script_fix",
+      "confidence": "low",
+      "title": "Funnels: chart not rendered",
+      "scenarios": ["Verify funnel conversion chart"],
+      "root_cause": "No screenshot captured; could be slow API or locator change",
+      "fix_location": "FunnelsPage.waitForChart"
+    }
+  ]
+}

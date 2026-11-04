@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDET Morning Helper AI</title>
+<meta name="description" content="AI skills that verify nightly regression reports, classify and route failures, generate test cases from specs and manage test data — Vinay Prasad">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fb; --surface:#ffffff; --surface-2:#f0f2f7; --text:#151821; --muted:#5b6274; --border:#e2e5ee;
+  --accent:#6d4aff; --accent-2:#0ea5a4; --accent-soft:#efeaff;
+  --c-script:#2563eb; --c-data:#0d9488; --c-flaky:#d97706; --c-env:#64748b; --c-defect:#dc2626; --c-review:#7c3aed;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 24px rgba(16,24,40,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0e14; --surface:#141821; --surface-2:#1b2030; --text:#e8eaf1; --muted:#9aa2b6; --border:#262c3c;
+    --accent:#9b84ff; --accent-2:#2dd4bf; --accent-soft:#231d42;
+    --c-script:#60a5fa; --c-data:#2dd4bf; --c-flaky:#fbbf24; --c-env:#94a3b8; --c-defect:#f87171; --c-review:#c4b5fd;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0e14; --surface:#141821; --surface-2:#1b2030; --text:#e8eaf1; --muted:#9aa2b6; --border:#262c3c;
+  --accent:#9b84ff; --accent-2:#2dd4bf; --accent-soft:#231d42;
+  --c-script:#60a5fa; --c-data:#2dd4bf; --c-flaky:#fbbf24; --c-env:#94a3b8; --c-defect:#f87171; --c-review:#c4b5fd;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.88em;background:var(--surface-2);padding:.1em .4em;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:60px}
+nav .brand{font-weight:800;letter-spacing:-.02em;color:var(--text)}
+nav .links{display:flex;gap:18px;margin-left:auto;font-size:14px}
+nav .links a{color:var(--muted)} nav .links a:hover{color:var(--text);text-decoration:none}
+#theme{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;font-size:13px}
+@media (max-width:760px){nav .links{display:none}}
+
+header.hero{padding:88px 0 56px}
+.eyebrow{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 12px;border-radius:999px}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.05;letter-spacing:-.035em;margin:18px 0 18px;font-weight:800}
+h1 .grad{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--muted);max-width:760px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:48px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.tile b{display:block;font-size:30px;letter-spacing:-.02em}
+.tile span{color:var(--muted);font-size:14px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+
+section{padding:64px 0;border-top:1px solid var(--border)}
+h2{font-size:clamp(26px,3.4vw,36px);letter-spacing:-.025em;margin:0 0 10px}
+.sub{color:var(--muted);max-width:720px;margin:0 0 32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.diagram{overflow-x:auto}
+.diagram .mermaid{min-width:640px;display:flex;justify-content:center}
+
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ba h3{margin:0 0 10px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ba ul{margin:0;padding-left:18px} .ba li{margin:6px 0}
+.ba .after{border-color:color-mix(in srgb,var(--accent) 40%,var(--border))}
+@media (max-width:760px){.ba{grid-template-columns:1fr}}
+
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{border:1px solid var(--border);background:var(--surface);color:var(--muted);padding:9px 14px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px;font-weight:600}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{display:none} .panel.active{display:block}
+.panel-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:20px;align-items:start}
+@media (max-width:900px){.panel-grid{grid-template-columns:1fr}}
+.panel h3{margin:0 0 8px;font-size:22px;letter-spacing:-.015em}
+.panel p{color:var(--muted);margin:0 0 14px}
+.checks{list-style:none;padding:0;margin:0}
+.checks li{padding:8px 0 8px 28px;position:relative;border-bottom:1px dashed var(--border);font-size:15px}
+.checks li:last-child{border-bottom:0}
+.checks li::before{content:"";position:absolute;left:4px;top:15px;width:12px;height:12px;border-radius:4px;background:var(--accent-2)}
+
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.cats{grid-template-columns:1fr 1fr}} @media (max-width:560px){.cats{grid-template-columns:1fr}}
+.cat{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--c);border-radius:12px;padding:16px}
+.cat h4{margin:0 0 4px;font-size:16px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.cat .to{font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);padding:2px 8px;border-radius:999px;white-space:nowrap}
+.cat p{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+.store{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:760px){.store{grid-template-columns:1fr}}
+.store .card h4{margin:0 0 6px} .store .card p{margin:0;color:var(--muted);font-size:14px}
+.store .card .ex{margin-top:10px;font-size:13px}
+
+.principles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.principles{grid-template-columns:1fr 1fr}} @media (max-width:560px){.principles{grid-template-columns:1fr}}
+.principles .card h4{margin:0 0 6px} .principles .card p{margin:0;color:var(--muted);font-size:14px}
+
+.stack{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px}
+footer{padding:40px 0 60px;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#">Vinay Prasad · QA Automation</a>
+    <div class="links">
+      <a href="#flow">Flow</a><a href="#skills">Skills</a><a href="#routing">Routing</a><a href="#data">Test data</a><a href="#ci">CI/CD</a>
+    </div>
+    <button id="theme" aria-label="Toggle colour theme">Theme</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SDET Morning Helper AI ☀️</span>
+    <h1>A regression suite that <span class="grad">triages itself</span>.</h1>
+    <p class="lead">AI skills on top of a Java · Cucumber · Serenity · Selenium framework. Each nightly report is checked, every failure is classified and sent to the team that has to fix it, test cases are written from specs, and the test data they need is created automatically. It all runs through GitLab CI and Jenkins.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/<your-github-username>/SDET-Morning-Helper-AI">View on GitHub</a>
+      <a class="btn" href="#flow">See the flow</a>
+    </div>
+    <div class="tiles">
+      <div class="tile"><b>5</b><span>integrated components</span></div>
+      <div class="tile"><b>6</b><span>failure categories, evidence-backed</span></div>
+      <div class="tile"><b>2</b><span>routed Slack channels</span></div>
+      <div class="tile"><b>3</b><span>data stores: DB · SFTP · repo</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p class="sub">About 25 product modules across several production regions run every night. Someone had to read every failure by hand and decide: is this our script, our data, a flaky run, or a real bug?</p>
+    <div class="ba">
+      <div class="card"><h3>Before</h3><ul>
+        <li>One engineer reads the Serenity report each morning</li>
+        <li>Flaky vs real decided by gut feeling</li>
+        <li>Defects reach manual QA late, sometimes not at all</li>
+        <li>The same failure gets investigated again every week</li>
+      </ul></div>
+      <div class="card after"><h3>After</h3><ul>
+        <li>An AI agent triages minutes after the run ends</li>
+        <li>Flakiness confirmed by an automatic rerun</li>
+        <li>Defects arrive in #qa-manual with repro steps and a draft Jira</li>
+        <li>A knowledge base makes each run smarter than the last</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="wrap">
+    <h2>End-to-end flow</h2>
+    <p class="sub">From a merge request or the nightly schedule to a fixed script or a confirmed defect.</p>
+    <div class="card diagram"><pre class="mermaid">
+flowchart LR
+  A[GitLab MR / nightly] -->|REST trigger| B[Jenkins pipeline]
+  B --> C[Serenity reports]
+  C --> D[Slack summary]
+  D -->|trigger| E[AI report verification]
+  E --> F{Classify}
+  F -->|Script fix| G[Slack: automation-quickfix]
+  F -->|Test data| G
+  F -->|Intermittent| G
+  F -->|Defect| H[Slack: qa-manual + draft Jira]
+  F -->|Low confidence| I[Human review]
+  G --> J[fix-and-rerun → MR]
+  J --> A
+  E -.learns.-> K[(Knowledge base)]
+  K -.-> E
+    </pre></div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <h2>The components</h2>
+    <p class="sub">Each one is an AI skill: a written procedure with rules and helper scripts. The agent follows it the same way every time.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-t="p1">1 · Report verification</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="p2">2 · Regression triage</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="p3">3 · Test case generation</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="p4">4 · Test data creation</button>
+      <button class="tab" role="tab" aria-selected="false" data-t="p5">5 · GitLab → Jenkins</button>
+    </div>
+
+    <div class="panel active" id="p1"><div class="panel-grid">
+      <div class="card">
+        <h3>AI report verification &amp; routing</h3>
+        <p>Once the nightly summary is in Slack, a post-build stage starts the agent in headless mode for that build.</p>
+        <ul class="checks">
+          <li>Fetches Serenity outcomes and screenshots</li>
+          <li>Groups failures by normalised error signature</li>
+          <li>Reruns only the suspected flaky scenarios to confirm them</li>
+          <li>Gives each verdict a confidence level. Low confidence goes to human review.</li>
+          <li>Posts script, data and intermittent issues to #automation-quickfix and defects to #qa-manual</li>
+          <li>A ✅/❌ reaction corrects a verdict, and the correction is saved to the knowledge base</li>
+        </ul>
+      </div>
+      <div class="card diagram"><pre class="mermaid">
+sequenceDiagram
+  participant J as Jenkins
+  participant S as Slack
+  participant A as AI agent
+  participant Q as automation-quickfix
+  participant M as qa-manual
+  J->>S: Summary block
+  J->>A: post-build trigger (build #)
+  A->>J: Fetch reports
+  A->>A: Group + classify
+  A->>J: Rerun suspected flaky
+  J-->>A: Rerun result
+  A->>Q: Script / data / intermittent
+  A->>M: Defects + repro + Jira draft
+  A->>S: Thread summary
+      </pre></div>
+    </div></div>
+
+    <div class="panel" id="p2"><div class="panel-grid">
+      <div class="card">
+        <h3>Regression triage skill</h3>
+        <p>Turns a build number into two reports, one for each audience. It's the engine behind component 1, and you can also run it yourself with <code>/regression-triage &lt;build&gt;</code>.</p>
+        <ul class="checks">
+          <li>Traces each failure: Gherkin step → step definition → page method → locator</li>
+          <li>Flags any commit from the last 3 days that touched the failing page</li>
+          <li>Applies ordered classification rules, and every verdict cites its evidence</li>
+          <li>Starts a parallel sub-agent per group when a build has many groups</li>
+          <li>Hands script-fix groups to fix-and-rerun and a locator-fixer sub-agent</li>
+        </ul>
+      </div>
+      <div class="card diagram"><pre class="mermaid">
+flowchart TD
+  A[Build #] --> B[Fetch report]
+  B --> C[Group by signature]
+  C --> D[Read knowledge base]
+  D --> E[Trace code path]
+  E --> F[Check recent commits]
+  F --> G[Classify + confidence]
+  G --> H[Automation report]
+  G --> I[Manual QA report]
+  H --> J[fix-and-rerun]
+      </pre></div>
+    </div></div>
+
+    <div class="panel" id="p3"><div class="panel-grid">
+      <div class="card">
+        <h3>Test case generation skill</h3>
+        <p>Takes a Confluence/PRD page, plus manual cases if you have them, and produces a traceable case set. Approved cases are then automated.</p>
+        <ul class="checks">
+          <li>Builds a requirement model first: fields, limits, states, rules and open questions</li>
+          <li>Orders cases Positive → Edge → Negative → State → Non-functional</li>
+          <li>Gives every case an ID and a Req ref, so nothing is invented</li>
+          <li>Merges cases that share setup into fewer scenarios</li>
+          <li>Reuses existing steps, with zero duplicate patterns and a compile check</li>
+          <li>Passes prerequisite data needs to the test data skill</li>
+        </ul>
+      </div>
+      <div class="card diagram"><pre class="mermaid">
+flowchart TD
+  A[Spec + cases] --> B[Requirement model]
+  B --> C[Positive]
+  B --> D[Edge]
+  B --> E[Negative]
+  B --> F[State]
+  B --> G[Non-functional]
+  C & D & E & F & G --> H[Traceable xlsx]
+  H --> I{Automate?}
+  I -->|yes| J[Scenarios reuse steps]
+  J --> K[Test data skill]
+      </pre></div>
+    </div></div>
+
+    <div class="panel" id="p4"><div class="panel-grid">
+      <div class="card">
+        <h3>Test data creation skill</h3>
+        <p>Triggered by test case generation (a new prerequisite), by triage (a test-data verdict), or by an engineer.</p>
+        <ul class="checks">
+          <li>Copies the exact shape of an existing sample and never invents a structure</li>
+          <li>Adds an idempotent scenario to the Test Data Creation suite that only creates what's missing</li>
+          <li>Picks DB, SFTP or repo using clear rules</li>
+          <li>Uses only synthetic identities and naming conventions</li>
+          <li>Needs human approval for every remote write</li>
+        </ul>
+      </div>
+      <div class="card diagram"><pre class="mermaid">
+flowchart LR
+  G[Generation] --> T[Test data skill]
+  R[Triage] --> T
+  T --> S[Data suite<br/>idempotent]
+  T --> Q{Store}
+  Q --> DB[(MySQL)]
+  Q --> SF[(SFTP)]
+  Q --> RP[(Repo)]
+      </pre></div>
+    </div></div>
+
+    <div class="panel" id="p5"><div class="panel-grid">
+      <div class="card">
+        <h3>GitLab CI test stage → Jenkins</h3>
+        <p>A <code>test</code> stage maps changed files to product pods and calls Jenkins over REST, so only those pods' suites run.</p>
+        <ul class="checks">
+          <li>Maps changed files → module → pod. Framework changes run Smoke on all pods.</li>
+          <li><code>buildWithParameters</code> call, then polls the queue and the build</li>
+          <li>Blocks MRs that change automation code. Nightly runs don't block.</li>
+          <li>Keeps the token in masked CI variables, never in YAML</li>
+        </ul>
+      </div>
+      <div class="card diagram"><pre class="mermaid">
+sequenceDiagram
+  participant G as GitLab CI
+  participant J as Jenkins
+  participant S as Slack
+  G->>G: changed files → pods
+  G->>J: POST buildWithParameters
+  J-->>G: queue URL
+  G->>J: poll build
+  J->>S: report + AI triage
+  J-->>G: SUCCESS / FAILURE
+      </pre></div>
+    </div></div>
+  </div>
+</section>
+
+<section id="routing">
+  <div class="wrap">
+    <h2>Failure categories &amp; routing</h2>
+    <p class="sub">Rules are applied in order and the first strong match wins. Every verdict cites evidence: the error line, expected vs actual, and a screenshot.</p>
+    <div class="cats">
+      <div class="cat" style="--c:var(--c-script)"><h4>Script fix <span class="to">#automation-quickfix</span></h4><p>Locator or timeout failure while the screenshot shows the feature working, or the wrong dropdown, or a recent commit to that page.</p></div>
+      <div class="cat" style="--c:var(--c-data)"><h4>Test data <span class="to">#automation-quickfix</span></h4><p>A missing prerequisite, a name collision or a stale template. Sent to the test data skill.</p></div>
+      <div class="cat" style="--c:var(--c-flaky)"><h4>Intermittent <span class="to">#automation-quickfix</span></h4><p>Passed on the automatic rerun. A flake counter turns it into a script fix once it crosses a threshold.</p></div>
+      <div class="cat" style="--c:var(--c-env)"><h4>Environment <span class="to">#automation-quickfix</span></h4><p>Login or session errors, network errors, or many unrelated modules failing with the same signature.</p></div>
+      <div class="cat" style="--c:var(--c-defect)"><h4>Product defect <span class="to">#qa-manual</span></h4><p>Correct input but a business mismatch, an error toast or a 4xx/5xx, and it fails again on rerun.</p></div>
+      <div class="cat" style="--c:var(--c-review)"><h4>Needs review <span class="to">both</span></h4><p>Low confidence or conflicting evidence. The report says what evidence would settle it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap">
+    <h2>Where test data lives</h2>
+    <p class="sub">At runtime the framework looks in the DB first, then the repo, then SFTP. The skill always says which store it used and why.</p>
+    <div class="store">
+      <div class="card"><h4>MySQL · JDBC</h4><p>Structured JSON that varies by scenario or environment, changes often, or is large. Keyed by scenario name.</p><div class="ex"><code>journey templates</code> <code>payloads</code></div></div>
+      <div class="card"><h4>SFTP</h4><p>Files every Jenkins agent reads, binaries and bulk uploads, and data that pipelines refresh.</p><div class="ex"><code>testData.xlsx</code> <code>upload CSVs</code></div></div>
+      <div class="card"><h4>Repo</h4><p>Small, static fixtures that get reviewed along with the code that uses them.</p><div class="ex"><code>CSV headers</code> <code>XML fixtures</code></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="ci">
+  <div class="wrap">
+    <h2>Design principles</h2>
+    <p class="sub">What keeps an AI-driven pipeline trustworthy.</p>
+    <div class="principles">
+      <div class="card"><h4>Evidence before verdict</h4><p>Nothing is called a defect without expected vs actual, a screenshot or an API response.</p></div>
+      <div class="card"><h4>Signatures, not scenarios</h4><p>40 failures usually come from 5–8 root causes. Analyse those.</p></div>
+      <div class="card"><h4>Confirm, don't guess</h4><p>A failure is only labelled intermittent after the automatic rerun passes.</p></div>
+      <div class="card"><h4>Humans approve outward actions</h4><p>Jira tickets, pushes and remote data writes need a person to approve them.</p></div>
+      <div class="card"><h4>Self-learning</h4><p>Confirmed patterns and corrections go into a knowledge base that's read first on the next run.</p></div>
+      <div class="card"><h4>Secrets stay secret</h4><p>Credentials are referenced by key name and read through permission prompts.</p></div>
+    </div>
+    <h2 style="margin-top:48px">Tech stack</h2>
+    <div class="stack" style="margin-top:14px">
+      <span class="chip">Java 17</span><span class="chip">Cucumber 7</span><span class="chip">Serenity BDD</span><span class="chip">Selenium 4</span><span class="chip">Rest Assured</span><span class="chip">Maven</span><span class="chip">Jenkins</span><span class="chip">GitLab CI</span><span class="chip">MySQL / JDBC</span><span class="chip">SFTP</span><span class="chip">AWS SSM</span><span class="chip">Slack API</span><span class="chip">Claude Code skills &amp; sub-agents</span><span class="chip">Python</span><span class="chip">Bash</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Vinay Prasad · Case study. No proprietary code or data.</span>
+    <span><a href="https://www.linkedin.com/in/<your-profile>">LinkedIn</a> · <a href="https://github.com/<your-github-username>">GitHub</a></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function(){
+  const root=document.documentElement;
+  let saved=null; try{saved=localStorage.getItem('theme')}catch(e){}
+  if(saved) root.setAttribute('data-theme',saved);
+  const isDark=()=>root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const sources=[...document.querySelectorAll('.mermaid')].map(el=>el.textContent);
+  async function render(){
+    if(!window.mermaid) return;
+    document.querySelectorAll('.mermaid').forEach((el,i)=>{el.removeAttribute('data-processed');el.innerHTML=sources[i]});
+    mermaid.initialize({startOnLoad:false,theme:isDark()?'dark':'neutral',securityLevel:'strict',fontFamily:'Inter, system-ui, sans-serif'});
+    // render only visible diagrams; hidden tab panels render when opened
+    await mermaid.run({nodes:[...document.querySelectorAll('.mermaid')].filter(n=>n.offsetParent!==null)});
+  }
+  document.getElementById('theme').addEventListener('click',()=>{
+    const next=isDark()?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('theme',next)}catch(e){}
+    render();
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    t.setAttribute('aria-selected','true');
+    document.getElementById(t.dataset.t).classList.add('active');
+    render();
+  }));
+  window.addEventListener('load',render);
+})();
+</script>
+</body>
+</html>
